@@ -1,5 +1,5 @@
 from typing import Optional
-from fastapi import FastAPI, status, HTTPException
+from fastapi import FastAPI, Response, status, HTTPException
 from fastapi.params import Body
 from pydantic import BaseModel
 from random import randrange
@@ -29,7 +29,7 @@ def get_posts():
     return myPosts
 
 
-@app.post("/posts", status_code=status.HTTP_201_CREATED)
+@app.post("/posts", status_code=status.HTTP_201_CREATED) # default status code for the method set like this
 def create_post(post: Post):
     post_dict = post.dict()
     post_dict["id"] = randrange(2, 10000000)
@@ -45,6 +45,17 @@ def get_post(id: int):
                             detail=f"post with id: {id} was not found")
 
     return {"data": post}
+
+
+@app.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_post(id: int):
+    post = find_post(id)
+    if not post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"post with id: {id} was not found")
+
+    myPosts.remove(post)
+    return Response(status_code=status.HTTP_204_NO_CONTENT) # return status code only for delete
 
 
 def find_post(id: int):
