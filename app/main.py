@@ -55,8 +55,10 @@ def get_posts():
 # default status code for the method set like this
 @app.post("/posts", status_code=status.HTTP_201_CREATED)
 def create_post(post: Post):
-    cursor.execute("INSERT INTO posts (title, content, published) VALUES (%s, %s, %s) RETURNING *",
-                   (post.title, post.content, post.published))
+    cursor.execute(
+        "INSERT INTO posts (title, content, published) VALUES (%s, %s, %s) RETURNING *",
+        (post.title, post.content, post.published)
+    )
     new_post = cursor.fetchone()
     col_names = [desc[0] for desc in cursor.description]
     new_post = [dict(zip(col_names, new_post))]
@@ -66,11 +68,14 @@ def create_post(post: Post):
 
 @app.get("/posts/{id}")
 def get_post(id: int):
-    post = find_post(id)
+    cursor.execute("SELECT * FROM posts WHERE id = %s", (str(id),))
+    post = cursor.fetchone()
     if not post:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"post with id: {id} was not found")
-
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="post not found"
+        )
+    col_names = [desc[0] for desc in cursor.description]
+    post = [dict(zip(col_names, post))]
     return {"data": post}
 
 
