@@ -3,6 +3,7 @@ from fastapi import FastAPI, Response, status, HTTPException
 from fastapi.params import Body
 from pydantic import BaseModel
 from random import randrange
+import psycopg
 app = FastAPI()
 
 
@@ -10,13 +11,18 @@ class Post(BaseModel):
     title: str
     content: str
     published: bool = True  # default value
-    rating: Optional[int] = None  # optional value
+    # rating: Optional[int] = None  # optional value
+
+with psycopg.connect("dbname=fastapi-course user=postgres host=localhost port=5432 password=postgres") as conn:
+    with conn.cursor() as cur:
+        print("Database conntction was successful")
 
 
 myPosts = [
     {"title": "title of post 1 ", "content": "content of post 1", "id": 1},
     {"title": "fav foods ", "content": "i like pizza", "id": 2}
 ]
+
 
 def find_post(id: int):
     for post in myPosts:
@@ -34,7 +40,8 @@ def get_posts():
     return myPosts
 
 
-@app.post("/posts", status_code=status.HTTP_201_CREATED) # default status code for the method set like this
+# default status code for the method set like this
+@app.post("/posts", status_code=status.HTTP_201_CREATED)
 def create_post(post: Post):
     post_dict = post.dict()
     post_dict["id"] = randrange(2, 10000000)
@@ -60,7 +67,8 @@ def delete_post(id: int):
                             detail=f"post with id: {id} was not found")
 
     myPosts.remove(post)
-    return Response(status_code=status.HTTP_204_NO_CONTENT) # return status code only for delete
+    # return status code only for delete
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @app.put("/posts/{id}")
