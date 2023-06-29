@@ -18,7 +18,7 @@ class Post(BaseModel):
 while True:
     try:
         conn = psycopg.connect(
-        "dbname=fastapi-course user=postgres host=localhost port=5432 password=postgres")
+            "dbname=fastapi-course user=postgres host=localhost port=5432 password=postgres")
         cursor = conn.cursor()
         print("connected to db")
         break
@@ -55,10 +55,13 @@ def get_posts():
 # default status code for the method set like this
 @app.post("/posts", status_code=status.HTTP_201_CREATED)
 def create_post(post: Post):
-    post_dict = post.dict()
-    post_dict["id"] = randrange(2, 10000000)
-    myPosts.append(post_dict)
-    return {"data": post_dict}
+    cursor.execute("INSERT INTO posts (title, content, published) VALUES (%s, %s, %s) RETURNING *",
+                   (post.title, post.content, post.published))
+    new_post = cursor.fetchone()
+    col_names = [desc[0] for desc in cursor.description]
+    new_post = [dict(zip(col_names, new_post))]
+    conn.commit()
+    return {"data": new_post}
 
 
 @app.get("/posts/{id}")
