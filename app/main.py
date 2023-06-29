@@ -1,3 +1,4 @@
+import time
 from typing import Optional
 from fastapi import FastAPI, Response, status, HTTPException
 from fastapi.params import Body
@@ -13,10 +14,17 @@ class Post(BaseModel):
     published: bool = True  # default value
     # rating: Optional[int] = None  # optional value
 
-with psycopg.connect("dbname=fastapi-course user=postgres host=localhost port=5432 password=postgres") as conn:
-    with conn.cursor() as cur:
-        print("Database conntction was successful")
 
+while True:
+    try:
+        conn = psycopg.connect(
+        "dbname=fastapi-course user=postgres host=localhost port=5432 password=postgres")
+        cursor = conn.cursor()
+        print("connected to db")
+        break
+    except Exception as e:
+        print(e)
+        time.sleep(2)
 
 myPosts = [
     {"title": "title of post 1 ", "content": "content of post 1", "id": 1},
@@ -37,7 +45,11 @@ async def root():
 
 @app.get("/posts")
 def get_posts():
-    return myPosts
+    cursor.execute("SELECT * FROM posts")
+    posts = cursor.fetchall()
+    col_names = [desc[0] for desc in cursor.description]
+    posts = [dict(zip(col_names, post)) for post in posts]
+    return {"data": posts}
 
 
 # default status code for the method set like this
