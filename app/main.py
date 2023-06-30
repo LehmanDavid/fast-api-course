@@ -26,17 +26,6 @@ while True:
         print(e)
         time.sleep(2)
 
-myPosts = [
-    {"title": "title of post 1 ", "content": "content of post 1", "id": 1},
-    {"title": "fav foods ", "content": "i like pizza", "id": 2}
-]
-
-
-def find_post(id: int):
-    for post in myPosts:
-        if post["id"] == id:
-            return post
-
 
 @app.get("/")
 async def root():
@@ -92,11 +81,20 @@ def delete_post(id: int):
 
 
 @app.put("/posts/{id}")
-def update_post(id: int, updated_post: Post):
-    post = find_post(id)
-    if not post:
+def update_post(id: int, post: Post):
+    cursor.execute(
+        "UPDATE posts SET title = %s, content = %s, published = %s WHERE id = %s RETURNING *",
+        (post.title, post.content, post.published,  str(id),)
+    )
+
+    updated_post = cursor.fetchone()
+    col_names = [desc[0] for desc in cursor.description]
+    updated_post = [dict(zip(col_names, updated_post))]
+
+    conn.commit()
+
+    if not updated_post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"post with id: {id} was not found")
-    post_index = myPosts.index(post)
-    myPosts[post_index] = updated_post
+
     return {"data": updated_post}
