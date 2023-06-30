@@ -5,17 +5,19 @@ from ..database import get_db
 from typing import List
 from fastapi import APIRouter
 
-router = APIRouter()
+router = APIRouter(
+    prefix="/posts",
+)
 
 
-@router.get("/posts", response_model=List[schemas.PostResponse])
+@router.get("/", response_model=List[schemas.PostResponse])
 def get_posts(db: Session = Depends(get_db)):
     posts = db.query(models.Post).all()
     return posts
 
 
 # default status code for the method set like this
-@router.post("/posts", status_code=status.HTTP_201_CREATED, response_model=schemas.PostResponse)
+@router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.PostResponse)
 def create_post(post: schemas.PostCreate, db: Session = Depends(get_db)):
     # unpacking the dictionary and passing it as arguments
     new_post = models.Post(**post.dict())
@@ -25,7 +27,7 @@ def create_post(post: schemas.PostCreate, db: Session = Depends(get_db)):
     return new_post
 
 
-@router.get("/posts/{id}", response_model=schemas.PostResponse)
+@router.get("/{id}", response_model=schemas.PostResponse)
 def get_post(id: int, db: Session = Depends(get_db)):
     post = db.query(models.Post).filter(models.Post.id == id).first()
     if not post:
@@ -34,7 +36,7 @@ def get_post(id: int, db: Session = Depends(get_db)):
     return post
 
 
-@router.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_post(id: int, db: Session = Depends(get_db)):
     post = db.query(models.Post).filter(models.Post.id == id)
     if not post.first():
@@ -46,7 +48,7 @@ def delete_post(id: int, db: Session = Depends(get_db)):
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@router.put("/posts/{id}", response_model=schemas.PostResponse)
+@router.put("/{id}", response_model=schemas.PostResponse)
 def update_post(id: int, update_data: schemas.PostCreate, db: Session = Depends(get_db)):
     post_query = db.query(models.Post).filter(models.Post.id == id)
     post = post_query.first()
