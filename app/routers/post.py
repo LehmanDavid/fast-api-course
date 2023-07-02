@@ -1,7 +1,7 @@
-from .. import schemas, models, oauth2
+from app import schemas, models, oauth2
 from fastapi import Response, status, HTTPException, Depends
 from sqlalchemy.orm import Session
-from ..database import get_db
+from app.database import get_db
 from typing import List
 from fastapi import APIRouter
 
@@ -12,14 +12,20 @@ router = APIRouter(
 
 
 @router.get("/", response_model=List[schemas.PostResponse])
-def get_posts(db: Session = Depends(get_db), current_user: models.User = Depends(oauth2.get_current_user)):
-    posts = db.query(models.Post).filter(models.Post.owner_id == current_user.id).all()
+def get_posts(db: Session = Depends(get_db),
+              current_user: models.User = Depends(oauth2.get_current_user),
+              limit: int = 10):
+    print(limit)
+    posts = db.query(models.Post).filter(
+        models.Post.owner_id == current_user.id).all()
     return posts
 
 
 # default status code for the method set like this
-@router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.PostResponse)
-def create_post(post: schemas.PostCreate, db: Session = Depends(get_db), current_user: models.User = Depends(oauth2.get_current_user)):
+@router.post("/", status_code=status.HTTP_201_CREATED,
+             response_model=schemas.PostResponse)
+def create_post(post: schemas.PostCreate, db: Session = Depends(get_db),
+                current_user: models.User = Depends(oauth2.get_current_user)):
     # unpacking the dictionary and passing it as arguments
     new_post = models.Post(owner_id=current_user.id, **post.dict())
     db.add(new_post)
@@ -29,7 +35,8 @@ def create_post(post: schemas.PostCreate, db: Session = Depends(get_db), current
 
 
 @router.get("/{id}", response_model=schemas.PostResponse)
-def get_post(id: int, db: Session = Depends(get_db), current_user: models.User = Depends(oauth2.get_current_user)):
+def get_post(
+        id: int, db: Session = Depends(get_db), current_user: models.User = Depends(oauth2.get_current_user)):
     post = db.query(models.Post).filter(models.Post.id == id).first()
     if not post or post.owner_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
