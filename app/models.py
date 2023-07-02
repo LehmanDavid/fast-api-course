@@ -1,5 +1,6 @@
 from .database import Base
-from sqlalchemy import Column, Integer, String, Boolean, TIMESTAMP, text
+from sqlalchemy import Column, Integer, String, Boolean, TIMESTAMP, text, ForeignKey
+from sqlalchemy.orm import relationship
 
 
 class Post(Base):
@@ -9,7 +10,8 @@ class Post(Base):
     content = Column(String, nullable=False)
     published = Column(Boolean, server_default='True')
     created_at = Column(TIMESTAMP(timezone=True), server_default=text('now()'))
-    
+    owner_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    owner = relationship("User") # sqlalchemy relationship need to retrieve data from other table (User)
     
 class User(Base):
     __tablename__ = "users"
