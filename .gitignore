@@ -1,0 +1,22 @@
+# .gitignore
+
+# Ignore the Python compiled files
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+*.pyc
+
+# Ignore virtual environment folders
+venv
+*.venv
+*.venv/
+
+# Ignore the .env file
+.env
+
+# Ignore Jupyter Notebook files
+.ipynb_checkpoints
+
+# Ignore database files (sqlite for example)
+*.sqlite
