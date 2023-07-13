@@ -5,15 +5,16 @@ from app import schemas, models
 from fastapi import Depends, status, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from app.database import get_db
+from app.config import settings
 
 oauth2_schema = OAuth2PasswordBearer(tokenUrl="login")
 # SECRET_KEY
 # Algorithm
 # Exporation time
 
-SECRET_KEY = 'a3344cd21c53ce65bcfa03fbb46e75e1d19e7b44211a1434a07d3a034d32e164'
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
+SECRET_KEY = settings.SECRET_KEY
+ALGORITHM = settings.ALGORITHM
+ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
 
 
 def create_access_token(data: dict):
@@ -38,8 +39,10 @@ def verify_token(token: str, credentials_exception):
 
 
 def get_current_user(token: schemas.TokenData = Depends(oauth2_schema), db: Session = Depends(get_db)):
-    credentionals_exception = HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
-                                            detail="Could not validate credentials", headers={"WWW-Authenticate": "Bearer"})
+    credentionals_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials", headers={"WWW-Authenticate": "Bearer"}
+    )
     token = verify_token(token, credentionals_exception)
     user = db.query(models.User).filter(models.User.id == token.id).first()
     return user

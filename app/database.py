@@ -3,16 +3,11 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from pydantic import BaseSettings
 
-class Settings(BaseSettings):
-    database_password: str
-    database_user: str = 'postgres'
-    database_name: str = 'fastapi-course'
+from app.config import settings
 
-    class Config:
-        env_file = '.env' 
+
+SQLALCHEMY_DATABASE_URL = f"postgresql://{settings.DATABASE_USER}:{settings.DATABASE_PASSWORD}@{settings.DATABASE_HOSTNAME}:{settings.DATABASE_PORT}/{settings.DATABASE_NAME}"
 # SQLALCHEMY_DATABASE_URL = "postgresql://user:password@postgresserver/db"
-
-SQLALCHEMY_DATABASE_URL = "postgresql://postgres:postgres@localhost:5432/fastapi-course"
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL
@@ -27,16 +22,3 @@ def get_db():
         yield db
     finally:
         db.close()
-
-
-# connection for raw sql queries using psycopg
-# while True:
-#     try:
-#         conn = psycopg.connect(
-#             "dbname=fastapi-course user=postgres host=localhost port=5432 password=postgres")
-#         cursor = conn.cursor()
-#         print("connected to db")
-#         break
-#     except Exception as e:
-#         print(e)
-#         time.sleep(2)
